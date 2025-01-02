@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Protected PDF Viewer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Enter Secret Code</h1>
+    <form id="secretCodeForm">
+      <input
+        type="password"
+        id="secretCode"
+        placeholder="Enter Secret Code"
+        required
+      />
+      <button type="submit">Submit</button>
+    </form>
+
+    <div id="content" style="display: none">
+      <h1>Upload a PDF File</h1>
+      <form
+        action="/upload"
+        method="POST"
+        enctype="multipart/form-data"
+        id="uploadForm"
+      >
+        <label for="category">Select Category:</label>
+        <select name="category" id="category" required>
+          <option value="FavoriteBooks">Favorite Books</option>
+          <option value="BooksIHave">Books I Have</option>
+          <option value="OtherBooks">Other Books</option>
+        </select>
+        <input type="file" name="pdfFile" accept="application/pdf" required />
+        <button type="submit">Upload PDF</button>
+      </form>
+
+      <h2>Files Organized by Category</h2>
+      <div id="categories">
+        <!-- Categories and files will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <script>
+      const secretCodeForm = document.getElementById("secretCodeForm");
+      const contentDiv = document.getElementById("content");
+      const uploadForm = document.getElementById("uploadForm");
+      const categoriesDiv = document.getElementById("categories");
+
+      secretCodeForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const secretCode = document.getElementById("secretCode").value;
+
+        // Validate secret code on the server
+        fetch(`/validate-code/${secretCode}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.valid) {
+              // Show content and hide the code input form
+              secretCodeForm.style.display = "none";
+              contentDiv.style.display = "block";
+
+              // If code is "11", hide the upload form
+              if (data.restricted) {
+                uploadForm.style.display = "none";
+              }
+
+              // Fetch and display categories and files
+              fetch("/categories")
+                .then((response) => response.json())
+                .then((categories) => {
+                  Object.keys(categories).forEach((category) => {
+                    if (data.allowedCategories.includes(category)) {
+                      const categorySection = document.createElement("div");
+                      categorySection.className = "category-section";
+                      categorySection.innerHTML = `<h3>${category}</h3>`;
+
+                      const fileList = document.createElement("ul");
+                      categories[category].forEach((file) => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<a href="/download/${category}/${file}" target="_blank">${file}</a>`;
+                        fileList.appendChild(li);
+                      });
+
+                      categorySection.appendChild(fileList);
+                      categoriesDiv.appendChild(categorySection);
+                    }
+                  });
+                });
+            } else {
+              alert("Invalid secret code. Please try again.");
+            }
+          })
+          .catch((err) => {
+            console.error("Error validating secret code:", err);
+            alert("Something went wrong. Please try again.");
+          });
+      });
+    </script>
+  </body>
+</html>

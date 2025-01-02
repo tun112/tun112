@@ -1,0 +1,16 @@
+{
+    "name": "pdf-upload-website",
+    "version": "1.0.0",
+    "description": "A simple website to upload and download PDF files",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "multer": "^1.4.5-lts.1"
+    },
+    "author": "Your Name",
+    "license": "ISC"
+  }
+  
